@@ -1,4 +1,5 @@
-from flaskblog import db, login_manager, app
+from flaskblog import db, login_manager
+from flask import current_app
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from datetime import datetime, timezone
 from flask_login import UserMixin
@@ -16,12 +17,12 @@ class User(db.Model, UserMixin): # We create the User class
     posts = db.relationship('Post', backref='author', lazy=True) 
 
     def get_reset_token(self, expires_sec=1800): # self means can have access to the User class attributes + methods
-        s = Serializer(app.config['SECRET_KEY'], expires_sec) # Serializer generates the token using the user's secret key
+        s = Serializer(current_app.config['SECRET_KEY'], expires_sec) # Serializer generates the token using the user's secret key
         return s.dumps({'user_id' : self.id}).decode('utf-8') # Returns the token using the dictionary of user_id with id value, and decodes into a string
 
     @staticmethod # Means no need for 'self' in this method (as user already handled in previous method)
     def verify_reset_token(token):
-        s = Serializer(app.config['SECRET_KEY']) # Creates instance of Serializer with same secret key
+        s = Serializer(current_app.config['SECRET_KEY']) # Creates instance of Serializer with same secret key
         try:
             user_id = s.loads(token)['user_id'] # Deserializes the token so that it can return the user_id held in the dictionary that belongs to the token
         except:
